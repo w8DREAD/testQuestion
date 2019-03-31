@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <script>
+         window.onload = () => {
+             var btn = document.getElementById('btn');
+             var inputs = document.getElementsByTagName('input');
+
+             btn.addEventListener('click',  () => {
+                 var xhr = new XMLHttpRequest();
+                 var userData = `username=${inputs[0].value}&password=${inputs[1].value}`;
+                 xhr.open('POST', '/login');
+
+                 // установка типа контента на сервер
+                 xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+                 //отправка данных
+                 xhr.send(userData);
+             });
+         };
+     </script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body style="text-align: center; max-width: 10%; margin: auto; margin-top: 30px">
+<form name="login" method="post">
+    <div class="form-group">
+        <label for="login">Username</label>
+        <input type="text" name="username" class="form-control" id="login" placeholder="Enter your name">
+        <small class="form-text text-muted">You can enter your name</small>
+    </div>
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="text" name="password" class="form-control" id="password" placeholder="Enter your password">
+    </div>
+    <button id="btn" type="button" class="btn btn-primary">Login</button>
+</form>
+</body>
+</html>
