@@ -1,22 +1,207 @@
-<h2 style="width: 20%; margin: auto">Статьи</h2>
+<h1>Добавить статью</h1>
+<div style="margin-top: 5%" ></div>
+<form>
+    Тема:
+    <input type="text" id="tag">
+    Текст статьи:
+    <input type="text" id="msg">
+</form>
 
-    <form name="articlesForm" style="margin: auto">
-            <input type="hidden" name="id" value="0" />
-            <div class="form-group" style="width: 30%; margin: auto">
-                <label style="width: 100%; height: 30px" for="theme">Тема:</label>
-                <input class="form-control" name="theme" />
-            </div>
-            <div class="form-group" style="width: 30%; margin: auto">
-                <label style="width: 100%" for="articleText">Текст статьи:</label>
-                 <textarea style="width: 100%" class="form-control" name="articleText" cols="30" rows="5"></textarea>
-            </div>
-            <div class="panel-body">
-                <button style="width: 100px" type="submit" class="btn btn-sm btn-primary">Добавить</button>
-                <a style="width: 100px; height: auto" id="reset" class="btn btn-sm btn-primary">Стереть</a>
-            </div>
-        </form>
-    <table class="table table-condensed table-striped table-bordered">
-            <thead><tr><th>Id</th><th style="width: 25%">Тема</th><th style="width: 75%">Статья</th><th>Управление</th></tr></thead>
-            <tbody>
-        </tbody>
-        </table>
+
+    <button style="margin-top: 2%" id="add">
+        Добавить
+    </button>
+<table style="margin: 10% 0 0 0" class="table table-condensed table-striped table-bordered" id="fields">
+    <thead><tr><th data-type="string" style="width: 25%">Тэг</th><th data-type="string" style="width: 75%">Статья</th></tr></thead>
+    <tbody id="articles">
+
+    </tbody>
+</table>
+
+<style>
+    input {border: 1px solid green}
+
+    th {
+        cursor: pointer;
+    }
+
+    th:hover {
+        background: yellow;
+    }
+</style>
+
+<script>
+
+    //добавление и удаление
+    const articles = document.getElementById('articles');
+    const msg = document.getElementById('msg');
+    const tag = document.getElementById('tag');
+    const add = document.getElementById('add');
+    var tbody = document.getElementsByTagName('tbody')[0];
+    var mask = 'tg_';
+    var arrTr;
+    var idls = 0;
+    msg.focus();
+window.onload = () => {
+    showArticles();
+    function showArticles() {
+        var ls = localStorage.length;
+        if(ls > 0) {
+            for (i = 0; i < ls; i++) {
+                var key = localStorage.key(i);
+                if(key.indexOf(mask) == 0) {
+                   var data = JSON.parse(localStorage.getItem(key));
+                   idls = key.slice(3);
+                    console.log(idls);
+                    writeLine(data.tg, data.tx);
+                    idls++;
+                }
+            }
+        }
+        
+    }
+};
+    const writeLine = (tag, text) => {
+        const line = document.createElement('tr');
+        line.innerHTML = `<td style="width: 25%">${tag}</td><td style="width: 75%">${text}</td><button id='but_${idls}' onclick="delete_line(this)">x</button>`;
+        articles.appendChild(line);
+    };
+    var delete_line = e => {
+        e.parentNode.parentNode.removeChild(e.parentNode);
+        var but = e.id.slice(4);
+        localStorage.removeItem(mask+but);
+    };
+
+
+    add.addEventListener('click', () => {
+        if(msg.value !== '' && tag.value !== '') {
+            const text = msg.value;
+            const tg = tag.value;
+            var lsData = {
+                tg: tag.value,
+                tx: msg.value
+            };
+            localStorage.setItem(mask+idls, JSON.stringify(lsData));
+            msg.value = '';
+            tag.value = '';
+            msg.placeholder = '';
+            tag.placeholder = '';
+            writeLine(tg, text);
+            idls++;
+        } else {
+            msg.placeholder = 'нужно указать текст';
+            tag.placeholder = 'нужно указать тему';
+        }
+    });
+
+// редактирование
+
+    var editTd;
+    var table = document.getElementById('articles');
+
+
+    table.onclick = (event) =>{
+
+        var target = event.target;
+
+        while (target != table) {
+            if (target.className == 'edit-cancel') {
+                finishEdit(editTd.elem, false);
+                return;
+            }
+
+            if (target.className == 'edit-ok') {
+                finishEdit(editTd.elem, true);
+                return;
+            }
+
+            if (target.nodeName == 'TD') {
+                if (editTd) return;
+
+                Edit(target);
+                return;
+            }
+
+            target = target.parentNode;
+        }
+    };
+
+    var Edit = (td) => {
+        editTd = {
+            elem: td,
+            data: td.innerHTML
+        };
+
+        td.classList.add('edit-td');
+
+        var textArea = document.createElement('textarea');
+        textArea.style.width = td.clientWidth + 'px';
+        textArea.style.height = td.clientHeight + 'px';
+        textArea.className = 'edit-area';
+
+        textArea.value = td.innerHTML;
+        td.innerHTML = '';
+        td.appendChild(textArea);
+        textArea.focus();
+
+        td.insertAdjacentHTML("beforeEnd",
+                '<div class="edit-controls"><button class="edit-ok">OK</button><button class="edit-cancel">CANCEL</button></div>'
+        );
+    };
+
+    var finishEdit = (td, isOk) => {
+        if (isOk) {
+            if(td.firstChild.value !== '') {
+                td.innerHTML = td.firstChild.value;
+            } else {
+                td.innerHTML = editTd.data;
+            }
+        } else {
+            td.innerHTML = editTd.data;
+        }
+        td.classList.remove('edit-td');
+        editTd = null;
+    };
+
+    // сортировка таблицы
+
+    var fields = document.getElementById('fields');
+
+    fields.onclick = e => {
+        if (e.target.tagName != 'TH') return;
+
+
+        sortField(e.target.cellIndex, e.target.getAttribute('data-type'));
+    };
+
+    var sortField = colNum => {
+        var tbody = fields.getElementsByTagName('tbody')[0];
+
+
+        var rowsArray = [].slice.call(tbody.rows);
+
+        var compare = (rowA, rowB) => {
+            if(rowA.cells[colNum].innerHTML > rowB.cells[colNum].innerHTML) {
+                return 1;
+            };
+            if (rowA.cells[colNum].innerHTML < rowB.cells[colNum].innerHTML) {
+                return -1;
+            }
+            return 0;
+        };
+
+        rowsArray.sort(compare);
+
+
+        fields.removeChild(tbody);
+
+
+        for (var i = 0; i < rowsArray.length; i++) {
+            tbody.appendChild(rowsArray[i]);
+        }
+
+
+        fields.appendChild(tbody);
+
+    };
+</script>

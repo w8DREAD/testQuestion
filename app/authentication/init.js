@@ -34,13 +34,11 @@ passport.deserializeUser((user, cb) => {
 const initPassport = () => {
   passport.use(new LocalStrategy((username, password, done) => {
       var findUser;
-      for (i = 0; i < users.length; i++) {
-        var u = users[i];
-        if (username === u.username && password === u.password) {
-          findUser = u;
-          break;
+    users.forEach(item => {
+      if(username === item.username && password === item.password) {
+        findUser = item;
         }
-      }
+    });
       if (findUser !== undefined) {
         return done(null, findUser);
       } else {

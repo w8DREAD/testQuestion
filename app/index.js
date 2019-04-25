@@ -6,7 +6,6 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const session = require('express-session');
 const SessionStore = require('session-file-store')(session);
-const hbs = require('hbs');
 
 const app = express();
 
